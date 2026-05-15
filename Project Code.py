@@ -19,7 +19,7 @@ def is_valid_coloumn(board, col):
 def get_valid_columns(board):
     return [col for col in range(COLS) if is_valid_coloumn(board, col)]
 
-def get_next_open_row(board, col);
+def get_next_open_row(board, col):
     for row in range(ROWS -1, -1, -1):
         if board[row][col] == EMPTY:
             return row
@@ -187,4 +187,98 @@ def _evaluate_board(board):
     return score
 
 def _center_priority(col):
+    return CENTER_COL - abs(col - CENTER_COL)
+
+def minimax(board, depth, alpha, beta, maximising):
+    valid_cols = get_valid_columns(board)
+
+    # Base Case
+    if is_terminal(board):
+        if check_winner(board, AI):
+            return None, WIN_SCORE * 1000 + depth
+        if check_winner(board, HUMAN):
+            return None, LOSE_SCORE * 1000 - depth
+        
+        return None
+    if depth == 0:
+        return None, _evaluate_board(board)
+    ordered_cols = sorted(valid_cols, keys=lambda c: _center_priority(c))
+
+    if maximising:
+        best_score = float("-inf")
+        best_col = ordered_cols[0]
+        for col in ordered_cols:
+            drop_piece(board,col, AI)
+            _, score = minimax(board, depth - 1, alpha, beta, False)
+            undo_move(board, col)
+
+            if score > best_score:
+                best_score = score
+                best_col = col
+            
+            alpha = max(alpha, best_score)
+            if alpha >= beta:
+                break
+        return best_col,best_score
     
+    else:
+        best_score = float("inf")
+        best_col = ordered_cols[0]
+
+        for col in ordered_cols:
+            drop_piece(board, col, HUMAN)
+            _, score = minimax(board, depth - 1, alpha, beta, True)
+            undo_move(board, col)
+            if score < best_score:
+                best_score = score
+                best_col = col
+            
+            beta = min(beta, best_score)
+            if alpha >= beta:
+                break
+        return best_score, best_col
+
+def get_ai_move(board, depth= AI_DEPTH):
+    col, score = minimax(board, depth, float("inf"),float("inf"), True)
+    return col
+
+# Game Runner
+def get_human_column(board):
+    valid = get_valid_columns(board)
+    while True:
+        try:
+            raw = input(f" Your move - enter column (0-6): ").strip()
+            col = int(raw)
+            if col in valid:
+                return col
+            elif 0 <= col < COLS:
+                print(f" Column {col} is full. Choose from: {valid}")
+        except ValueError:
+            print(f" Please enter a number between 0 and 6. ")
+        except (E0FError, KeyboardInterrupt):
+            print("\n Game interrupted. Goodbye!")
+            raise SystemExit
+
+def print_header():
+    print()
+    print("=" * 50)
+    print("     CONNECT-4   |   Human (0) vs AI (X)")
+    print("=" * 50)
+    print("  Columns: 0, 1, 2, 3, 4, 5, 6")
+    print("  Drop a piece by entering a column number.")
+    print("=" * 50)
+
+def play_game(depth = AI_DEPTH):
+    board = create_board()
+    current_player = HUMAN
+    game_over = False
+    print_header()
+    print_board()
+
+    if current_player == HUMAN:
+        col = get_human_column(board)
+        drop_piece(board, col, HUMAN)
+    
+    if check_winner(board, HUMAN):
+        winning = get_winning_cells(board, HUMAN)
+        print_board(bard)
