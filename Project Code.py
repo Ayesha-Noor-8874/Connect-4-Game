@@ -125,5 +125,66 @@ def print_board(board,winning_cells=None):
     print(" " + "-----" * COLS)
     print()
 
+# Section 2 --AI LOGIC
 
+WIN_SCORE = 100
+LOSE_SCORE = -100
+THREE_IN_ROW = 10
+TWO_IN_ROW = 5
+BLOCK_THREE = -80
+CENTER_BONUS = 3
+CENTER_COL = COLS//2
+AI_DEPTH = 5
 
+def _score_window(window, player):
+    opponent = HUMAN if player == AI else AI
+    ai_count = window.count(player)
+    opp_count = window.count(opponent)
+    empty_count = window.count(EMPTY)
+    score = 0
+
+    if ai_count == 4:
+        score += WIN_SCORE
+    elif ai_count == 3 and empty_count == 1:
+        score += THREE_IN_ROW
+    elif ai_count == 2 and empty_count ==2:
+        score += TWO_IN_ROW
+    
+    if opp_count == 3 and empty_count == 1:
+        score += BLOCK_THREE
+    
+    return score
+
+def _evaluate_board(board):
+    score = 0
+    center_column = [board[row][CENTER_COL] for row in range(ROWS)]
+    score += center_column.count(AI) * CENTER_BONUS
+
+    # Horizontal Windows
+    for row in range(ROWS):
+        for col in range(COLS - 3):
+            window = board[row][col : col + 4]
+            score += _score_window(window, AI)
+
+    # Vertical Windows
+    for col in range(COLS):
+        for row in range(ROWS -3):
+            window = [board[row + i][col] for i in range(4)]
+            score += _score_window(window, AI)
+
+    # Diagonal / windows
+    for row in range(ROWS -3):
+        for col in range(COLS - 3):
+            windows = [board[row + i][col + i] for i in range(4)]
+            score += _score_window(window, AI)
+    
+    # Diagonal / windows
+    for row in range(3, ROWS):
+        for col in range(COLS - 3):
+            window = [board[row - i][col + i] for i in range(4)]
+            score += _score_window(window, AI)
+    
+    return score
+
+def _center_priority(col):
+    
