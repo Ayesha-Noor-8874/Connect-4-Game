@@ -273,12 +273,64 @@ def play_game(depth = AI_DEPTH):
     current_player = HUMAN
     game_over = False
     print_header()
-    print_board()
+    print_board(board)
 
     if current_player == HUMAN:
         col = get_human_column(board)
         drop_piece(board, col, HUMAN)
+        
+        if check_winner(board, HUMAN):
+            winning = get_winning_cells(board, HUMAN)
+            print_board(board, HUMAN)
+            print("   ⭐ Congratulations - You Win! ⭐")
+            game_over = True
+        
+        elif not get_valid_columns(board):
+            print_board(board)
+            print("   It's a drwa! Well played.")
+            game_over = True
+        
+        else:
+            print_board(board)
+            current_player = AI
     
-    if check_winner(board, HUMAN):
-        winning = get_winning_cells(board, HUMAN)
-        print_board(bard)
+    else:
+        print(f"   AI is thinking (depth={depth})...")
+        col = get_ai_move(board, depth)
+        print(f"   AI drops in column {col}")
+
+        if check_winner(board, AI):
+            winning = get_winning_cells(board, AI)
+            print_board(board, winning)
+            print("   ❌ AI wins! Better luck next time.")
+            game_over = True
+        
+        elif not get_valid_columns(board):
+            print_board(board)
+            print("   It's a draw!")
+            game_over = True
+
+        else: 
+            print_board(board)
+            current_player = HUMAN
+    print()
+    play_again = input("   Play again? (y/n: )").strip().lower()
+    if play_again == "y":
+        play_game(depth)
+    else:
+        print("   Thanks for playing. Goodbye!")
+
+
+# MAIN
+if __name__ == "__main__":
+    depth = AI_DEPTH
+    import sys
+    if len(sys.argv) > 1:
+        try:
+            depth = int(sys.argv[1])
+            if not 1 <= depth <= 10:
+                raise ValueError
+            print(f"   Using search depth: {depth}")
+        except ValueError:
+            print("   Invalid depth argument. Using default depth 5.")
+    play_game(depth)
